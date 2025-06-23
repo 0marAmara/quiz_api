@@ -1,15 +1,16 @@
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework import renderers
+from rest_framework.views import APIView
 
 from quiz_api.permissions import IsOwnerOrReadOnly
 from quizcore.models import Quiz
 from quizcore.serializers import (
+    QuizDetailSerializer,
     QuizListSerializer,
     UserSerializer,
 )
@@ -76,7 +77,6 @@ from quizcore.serializers import (
 #     serializer_class = QuestionListSerializer
 
 
-
 # class QuizOwner(generics.GenericAPIView):
 #     queryset = Quiz.objects.all()
 #     serializer_class = QuizListSerializer
@@ -84,7 +84,6 @@ from quizcore.serializers import (
 #     def get(self, request, *args, **kwargs):
 #         quiz = self.get_object()
 #         return Response(quiz.owner.username)
-
 
 
 class QuizViewSet(viewsets.ModelViewSet):
@@ -96,10 +95,18 @@ class QuizViewSet(viewsets.ModelViewSet):
     def owner(self, request, *args, **kwargs):
         quiz = self.get_object()
         return Response(quiz.owner.username)
-    
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
+class QuizDetailViewSet(viewsets.ModelViewSet):
+    queryset = Quiz.objects.all()
+    serializer_class = QuizDetailSerializer
+    permission_classes = [IsOwnerOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
