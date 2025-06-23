@@ -21,12 +21,6 @@ class QuizListSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "description", "owner"]
 
 
-class Grade(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Grade
-        fields = ("id", "score")
-
-
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
@@ -106,7 +100,26 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         return quiz
 
 
-class GradeListSerializer(serializers.HyperlinkedModelSerializer):
+class GradeSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    quiz = QuizListSerializer(read_only=True)
+
     class Meta:
         model = Grade
-        fields = ("id", "score", "quiz", "user")
+        fields = ("id", "score", "quiz", "user", "created_at")
+
+
+class QuizSubmissionSerializer(serializers.Serializer):
+
+    answers = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField())
+    )
+
+    def validate_answers(self, value):
+        """Validate that answers have the correct structure"""
+        for answer in value:
+            if "question_id" not in answer or "answer_id" not in answer:
+                raise serializers.ValidationError(
+                    "Each answer must have 'question_id' and 'answer_id'"
+                )
+        return value

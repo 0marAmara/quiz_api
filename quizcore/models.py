@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Quiz(models.Model):
@@ -47,5 +48,12 @@ class Grade(models.Model):
         null=False,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
-    quiz = models.OneToOneField(Quiz, on_delete=models.CASCADE)
-    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="grades")
+    user = models.ForeignKey(
+        "auth.User", on_delete=models.CASCADE, related_name="grades"
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("quiz", "user")
+        ordering = ["-created_at"]
